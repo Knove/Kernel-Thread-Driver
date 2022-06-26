@@ -134,21 +134,73 @@ void mainthread()
 
 
 }
-
-
-NTSTATUS EntryPoint(ULONG64 mdl, ULONG64 code, ULONG64 output, ULONG64 PID)
+void* get_sys_module(const char* module_name)
 {
+	void* module_base = 0;
+	ULONG bytes = 0;
+	NTSTATUS status = ZwQuerySystemInformation(SystemModuleInformation, NULL, bytes, &bytes);
+
+	if (!bytes) { return NULL; }
+
+	PRTL_PROCESS_MODULES modules = (PRTL_PROCESS_MODULES)ExAllocatePoolWithTag(NonPagedPool, bytes, 0x4e425151);
+
+	status = ZwQuerySystemInformation(SystemModuleInformation, modules, bytes, &bytes);
+
+	if (!NT_SUCCESS(status)) { return NULL; }
+
+	PRTL_PROCESS_MODULE_INFORMATION module = modules->Modules;
+
+	for (ULONG i = 0; i < modules->NumberOfModules; i++)
+	{
+		if (strcmp((char*)module[i].FullPathName, module_name) == 0)
+		{
+			module_base = module[i].ImageBase;
+			break;
+		}
+	}
+
+	if (modules) { ExFreePoolWithTag(modules, 0x4e425151); }
+
+	if (module_base <= 0) { return NULL; }
+
+	return module_base;
+}
+
+void* get_sys_module_export(const char* module_name, const char* function_name)
+{
+	void* module = get_sys_module(module_name);
+
+	if (!module) { return NULL; }
+
+	return RtlFindExportedRoutineByName(module, function_name);
+}
+
+extern "C"
+NTSTATUS EntryPoint(const PMDL mdl)
+{
+	//ULONG64 mdl = 0x00007FF695AD0000;  // TODO
+	ULONG64 code = 0x1f180;
+	ULONG64 output = 0x1f188;
+	ULONG64 PID = 21992;
+
+	print("[+] START!");
+	DbgPrintEx(0, 0, "mdl : %p\n", mdl);
+
 	OUTPUT_ADDRESS = output;
 	CODE_ADDRESS = code;
 
-	MDL* mdlptr = reinterpret_cast<MDL*>(mdl);
-	if (!null_pfn(mdlptr)) {
+
+	//MDL* mdlptr = reinterpret_cast<MDL*>(mdl);
+	if (!null_pfn(mdl)) {
 		return STATUS_UNSUCCESSFUL;
 	}
+
+
 	HANDLE thread_handle = nullptr;
 	print("[+] PID: %d", PID);
 	print("[+] code: %d", code);
 	print("[+] output: %d", output);
+	
 	process::pid = PID;
 
 	OBJECT_ATTRIBUTES object_attribues{ };
@@ -156,7 +208,9 @@ NTSTATUS EntryPoint(ULONG64 mdl, ULONG64 code, ULONG64 output, ULONG64 PID)
 
 	NTSTATUS status = PsCreateSystemThread(&thread_handle, 0, &object_attribues, nullptr, nullptr, reinterpret_cast<PKSTART_ROUTINE>(&mainthread), nullptr);
 	//ZwClose(thread_handle);
-	//print("\n[+] Bye bye DriverEntry!");
+
+
+	print("\n[+] Bye bye DriverEntry!");
 	return STATUS_UNSUCCESSFUL;
 }
 
@@ -176,3 +230,5 @@ NTSTATUS EntryPoint(ULONG64 mdl, ULONG64 code, ULONG64 output, ULONG64 PID)
 //	return STATUS_SUCCESS;
 //
 //}
+
+

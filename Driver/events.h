@@ -4,23 +4,27 @@
 bool Connect() {
 
 	process::base_address = (ULONG64)PsGetProcessSectionBaseAddress(process::process);
-	//print("\n[+] base address:    0x%llX", process::base_address);
+	print("\n[+] base address:    0x%llX", process::base_address);
 
 	process::STRUCT_OFFSET_ADDRESS = ULONG64(process::base_address + OUTPUT_ADDRESS);
-	//print("\n[+] struct address:  0x%llX -> offset: 0x%llX", process::STRUCT_OFFSET_ADDRESS, (ULONG64)(process::STRUCT_OFFSET_ADDRESS - process::base_address)); //address where the struct address get stored
+	print("\n[+] struct address:  0x%llX -> offset: 0x%llX", process::STRUCT_OFFSET_ADDRESS, (ULONG64)(process::STRUCT_OFFSET_ADDRESS - process::base_address)); //address where the struct address get stored
 
 	process::STATUS_CODE_ADDRESS = ULONG64(process::base_address + CODE_ADDRESS);
 	process::STATUS_CODE_ADDRESS_REAL = readlocal<ULONG64>(process::STATUS_CODE_ADDRESS); //get the real address
-	//print("\n[+] code address:    0x%llX -> offset: 0x%llX => 0x%llX", process::STATUS_CODE_ADDRESS, (ULONG64)(process::STATUS_CODE_ADDRESS - process::base_address), process::STATUS_CODE_ADDRESS_REAL); //this just saves the address to the status 
+	print("\n[+] code address:    0x%llX -> offset: 0x%llX => 0x%llX", process::STATUS_CODE_ADDRESS, (ULONG64)(process::STATUS_CODE_ADDRESS - process::base_address), process::STATUS_CODE_ADDRESS_REAL); //this just saves the address to the status 
 	
 
 	int CURRCODE = readlocal<int>(process::STATUS_CODE_ADDRESS_REAL); // read it
-	//print("\n[+] code: %d", CURRCODE);
-	
+	print("\n[+] code: %d", CURRCODE);
+
+
+	int CURRSTRUCT = readlocal<int>(process::STRUCT_OFFSET_ADDRESS);
+	print("\n[+] struct: %d", CURRSTRUCT);
+
 	if (CURRCODE != 3) {
 		return false;
 	}
-	//print("\n[+] connected!");
+	print("\n[+] connected!");
 	status::ONLINE();
 
 	return true;

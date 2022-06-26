@@ -74,7 +74,7 @@ void Connect() {
 	std::cout << "test output address: 0x" << std::hex << &STRUCT_OFFSET_ADDRESS << " -> offset: 0x" << (ULONG64)((ULONG64)&STRUCT_OFFSET_ADDRESS - (ULONG64)GetModuleHandle(NULL)) << " => " << STRUCT_OFFSET_ADDRESS << std::endl;
 
 	while (STATUS_CODE != 0) {
-		Sleep(500);
+		Sleep(3500);
 		std::cout << "code: " << STATUS_CODE << std::endl;
 		std::cout << "waiting for communication!" << std::endl;
 

@@ -14,11 +14,14 @@ int main()
 
 
 	std::cout << "Hello world!" << std::endl;
+	pid = GetProcessId(L"UM.exe");
+
+	std::cout << "UM PID:" << pid << std::endl;
 	Connect();
 
-	pid = GetProcessId(L"FortniteClient-Win64-Shipping.exe");
+	pid = GetProcessId(L"Test.exe");
 
-	std::cout << "PID:" << pid << std::endl;
+	std::cout << "TARGET PID:" << pid << std::endl;
 	//init our target
 	if (!initTarget(pid)) return 1;
 
@@ -27,9 +30,16 @@ int main()
 	std::cout << "base: 0x" << std::hex << baseaddress << std::endl;
 
 	//a test
-	uint64_t UWORLD = Read<uint64_t>(0xB78BC70 + baseaddress);
 
-	std::cout << "test: 0x" << std::hex << UWORLD << std::endl;
+
+
+	//uint64_t UWORLD = Read<uint64_t>(0xA0971AFB28 + baseaddress);
+
+	//std::cout << "test1: 0x" << std::hex << UWORLD << std::endl;
+
+	//uint64_t UWORLD1 = Read<uint64_t>(0x13D2EFFA98 + baseaddress);
+
+	//std::cout << "tes2t: 0x" << std::hex << UWORLD1 << std::endl;
 
 	Disconnect();
 

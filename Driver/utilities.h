@@ -116,11 +116,19 @@ T readlocal(uintptr_t address)
     return buffer;
 }
 
+template< typename T >
+T readTarget(uintptr_t address)
+{
+    T buffer{};
+    read_virtual_memory(process::target_pid, process::target_process, (void*)address, &buffer, sizeof(T));
+    return buffer;
+}
+
 void read(uintptr_t from, uintptr_t to, ULONGLONG size)
 {
     SIZE_T bytes = 0;
     if (size || to || from) MmCopyVirtualMemory(process::target_process, (PVOID)from, process::process, (PVOID)to, size, KernelMode, &bytes);
-       
+
 }
 
 template< typename T >

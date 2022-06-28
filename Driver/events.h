@@ -18,7 +18,8 @@ bool Connect() {
 	print("\n[+] code: %d", CURRCODE);
 
 
-	int CURRSTRUCT = readlocal<int>(process::STRUCT_OFFSET_ADDRESS);
+	ULONG64 CURRSTRUCT_REAL = readlocal<ULONG64>(process::STRUCT_OFFSET_ADDRESS);
+	int CURRSTRUCT = readlocal<int>(CURRSTRUCT_REAL);
 	print("\n[+] struct: %d", CURRSTRUCT);
 
 	if (CURRCODE != 3) {
@@ -52,13 +53,13 @@ void Disconnect() {
 	*(PVOID*)(ExitStatus)			= _ExitStatus;
 	*(PVOID*)(CID)					= _CID;
 
-	//print("\n[+] Bye!");
+	print("\n[+] Bye!");
 	PsTerminateSystemThread(STATUS_SUCCESS);
 }
 
 void InitTarget() {
 	process::target_pid = readlocal<ULONG64>(readlocal<ULONG64>(process::STRUCT_OFFSET_ADDRESS));//double reading because STRUCT_OFFSET_ADDRESS saves a pointer that has pid
-	//print("\n[+] process::target_pid: %d", process::target_pid);
+	print("\n[+] process::target_pid: %d", process::target_pid);
 	if (process::target_pid != 0) {
 		status::SUCESSFUL();
 	}
@@ -72,6 +73,9 @@ void GetBase() {
 		ULONG64 base = (ULONG64)PsGetProcessSectionBaseAddress(process::target_process);
 		ULONG64 StructAddress = readlocal<ULONG64>(process::STRUCT_OFFSET_ADDRESS); //no double because direct writing
 		writelocal<ULONG64>(&base, (PVOID)StructAddress);
+
+		print("\n[+] base:  0x%llX", base);
+
 		status::SUCESSFUL();
 	}
 	else {
@@ -85,9 +89,18 @@ void Read() {
 	(MmCopyVirtualMemory(process::process, (PVOID)readlocal<ULONG64>(process::STRUCT_OFFSET_ADDRESS), PsGetCurrentProcess(), &StructAddress, sizeof(readd), KernelMode, &BytesRead));
 
 	//StructAddress = readlocal<readd>(readlocal<ULONG64>(process::STRUCT_OFFSET_ADDRESS)); //double reading because STRUCT_OFFSET_ADDRESS points to the struct and then we read the content
-	if (StructAddress.address < 0x7FFFFFFFFFFF && StructAddress.address > 0 && StructAddress.size > 0 && StructAddress.size < 200) {
+
+	print("\n[+] read1:  0x%llX , %d", StructAddress.address, StructAddress.size);
+
+	int get1 = readTarget<int>(StructAddress.address);
+	print("\n[+] target:  %d", get1);
+
+	if (StructAddress.address < 0x7FFFFFFFFFF && StructAddress.address > 0 && StructAddress.size > 0 && StructAddress.size < 200) {
 		read(StructAddress.address, StructAddress.output, StructAddress.size);
+		print("\n[+] read inner:    0x%llX", StructAddress.output);
 	}
-	
 	status::SUCESSFUL(); //we cant check if its unsuccessful
+
+	int get2 = readlocal<int>(StructAddress.address);
+	print("\n[+] target:  %d", get2);
 }

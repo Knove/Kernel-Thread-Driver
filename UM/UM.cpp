@@ -1,6 +1,7 @@
 #include "stdafx.h"
 
 DWORD pid;
+DWORD targetPid;
 DWORD64 baseaddress;
 
 int main()
@@ -17,13 +18,16 @@ int main()
 	pid = GetProcessId(L"UM.exe");
 
 	std::cout << "UM PID:" << pid << std::endl;
+
+	targetPid = GetProcessId(L"Test.exe");
+
+	std::cout << "TARGET PID:" << targetPid << std::endl;
+
 	Connect();
 
-	pid = GetProcessId(L"Test.exe");
 
-	std::cout << "TARGET PID:" << pid << std::endl;
 	//init our target
-	if (!initTarget(pid)) return 1;
+	if (!initTarget(targetPid)) return 1;
 
 	baseaddress = GetBase();
 
@@ -31,11 +35,12 @@ int main()
 
 	//a test
 
+	DWORD64 findNum = 0x00044D48FF934;
+	std::cout << "findNum: 0x" << std::hex << findNum << std::endl;
 
+	int UWORLD = Read<int>(findNum);
 
-	//uint64_t UWORLD = Read<uint64_t>(0xA0971AFB28 + baseaddress);
-
-	//std::cout << "test1: 0x" << std::hex << UWORLD << std::endl;
+	std::cout << "test2: " << UWORLD << std::endl;
 
 	//uint64_t UWORLD1 = Read<uint64_t>(0x13D2EFFA98 + baseaddress);
 
@@ -43,4 +48,7 @@ int main()
 
 	Disconnect();
 
+	int status;
+
+	std::cin >> status;
 }

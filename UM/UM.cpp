@@ -9,6 +9,7 @@ int _baseAddressOffset = 0x020;
 int _intialNamePtrOffset = 0x048;
 int _actualNamePtrOffset = 0x008;
 
+
 uint64_t GetUnityPlayerBaseAddress(uint64_t address, string moduleName)
 {
 	uint64_t unityPlayerBaseAddress = address;
@@ -43,13 +44,16 @@ uint64_t GetUnityPlayerBaseAddress(uint64_t address, string moduleName)
 	return unityPlayerBaseAddress;
 
 }
+// offset 
+uint64_t offs_gameObjectManager = 0x156C698;
 
 
 void Init(uint64_t address) {
 
 	//uint64_t gameObjectManager = Read<uint64_t>(1);
 
-	uint64_t unityPlayerBaseAddress = GetUnityPlayerBaseAddress(address, "UNITYPLAYER.DLL");
+	//uint64_t unityPlayerBaseAddress = GetUnityPlayerBaseAddress(address, "UNITYPLAYER.DLL");
+	uint64_t unityPlayerBaseAddress = address;
 
 }
 

@@ -1,6 +1,5 @@
 #pragma once
 
-
 bool Connect() {
 
 	process::base_address = (ULONG64)PsGetProcessSectionBaseAddress(process::process);
@@ -83,6 +82,57 @@ void GetBase() {
 	}
 }
 
+void GetPeb() {
+	if (NT_SUCCESS(PsLookupProcessByProcessId((HANDLE)process::target_pid, &process::target_process))) {
+		PPEB peb = PsGetProcessPeb(process::target_process);
+
+		KAPC_STATE state;
+		KeStackAttachProcess(process::target_process, &state);
+
+		PPEB_LDR_DATA ldr = peb->Ldr;
+
+		if (!ldr)
+		{
+			DbgPrintEx(0, 0, "Error pLdr not found \n");
+			KeUnstackDetachProcess(&state);
+			status::ERROR();
+		}
+
+		for (PLIST_ENTRY listEntry = (PLIST_ENTRY)ldr->ModuleListLoadOrder.Flink;
+			listEntry != &ldr->ModuleListLoadOrder;
+			listEntry = (PLIST_ENTRY)listEntry->Flink)
+		{
+			UNICODE_STRING module_name;
+			RtlInitUnicodeString(&module_name, L"UnityPlayer.dll");
+			PLDR_DATA_TABLE_ENTRY ldrEntry = CONTAINING_RECORD(listEntry, LDR_DATA_TABLE_ENTRY, InLoadOrderModuleList);
+			if (RtlCompareUnicodeString(&ldrEntry->BaseDllName, &module_name, TRUE) ==
+				0) {
+				ULONG64 baseAddr = (ULONG64)ldrEntry->DllBase;
+				KeUnstackDetachProcess(&state);
+
+				ULONG64 StructAddress = readlocal<ULONG64>(process::STRUCT_OFFSET_ADDRESS); //no double because direct writing
+				writelocal<ULONG64>(&baseAddr, (PVOID)StructAddress);
+
+				print("\n[+] peb:  0x%llX", (uint64_t)peb);
+
+				status::SUCESSFUL();
+
+				return;
+
+			}
+
+		}
+		status::ERROR();
+		DbgPrintEx(0, 0, "Error exiting funcion nothing was found found \n");
+		KeUnstackDetachProcess(&state);
+
+
+	}
+	else {
+		status::ERROR();
+	}
+}
+
 void Read() {
 	readd StructAddress = {};
 	SIZE_T BytesRead{ 0 };
@@ -93,7 +143,6 @@ void Read() {
 	print("\n[+] read1:  0x%llX , %d", StructAddress.address, StructAddress.size);
 
 	int get1 = readTarget<int>(StructAddress.address);
-	print("\n[+] target:  %d", get1);
 
 	if (StructAddress.address < 0x7FFFFFFFFFF && StructAddress.address > 0 && StructAddress.size > 0 && StructAddress.size < 200) {
 		read(StructAddress.address, StructAddress.output, StructAddress.size);
@@ -102,5 +151,7 @@ void Read() {
 	status::SUCESSFUL(); //we cant check if its unsuccessful
 
 	int get2 = readlocal<int>(StructAddress.address);
-	print("\n[+] target:  %d", get2);
 }
+
+
+

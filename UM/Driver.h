@@ -24,7 +24,7 @@ typedef struct readd {
 
 
 bool Await_Approval() {
-	while (STATUS_CODE == 4 || STATUS_CODE == 5 || STATUS_CODE == 6) {
+	while (STATUS_CODE == 4 || STATUS_CODE == 5 || STATUS_CODE == 6 || STATUS_CODE == 7) {
 		Sleep(0);
 	}
 	if (STATUS_CODE == 1) { //success
@@ -56,8 +56,6 @@ T Read(uint64_t read_address) {
 
 	STRUCT_OFFSET_ADDRESS = &Data;
 	STATUS_CODE = 4;
-
-	std::cout << "read output:        0x" << std::hex << &response << " .size:" << Data.size << std::endl;
 
 	if (Await_Approval()) {
 		return response;
@@ -106,6 +104,16 @@ ULONG64 GetBase() {
 }
 
 
+ULONG64 GetPeb() {
+	ULONG64 peb = 0;
+	STRUCT_OFFSET_ADDRESS = &peb;
+	STATUS_CODE = 7; //work! //but peb
+	if (Await_Approval()) {
+		return peb;
+	}
+}
+
+
 static HWND get_process_wnd(uint32_t pid) {
 	std::pair<HWND, uint32_t> params = { 0, pid };
 
@@ -145,3 +153,17 @@ DWORD GetProcessId(const wchar_t* ImageName) {
 	CloseHandle(Snapshot);
 	return NULL;
 }
+
+// ¶ÁÈ¡×Ö·û´®
+string GetUnicodeString(uint64_t addr) {
+	char16_t wcharTemp = { '\0' };
+
+	wcharTemp = Read<char16_t>(addr);
+
+	string u8_conv = wstring_convert<codecvt_utf8_utf16<char16_t>, char16_t>{}.to_bytes(wcharTemp);
+	cout << "u8_conv" << u8_conv <<  "\n";
+	return u8_conv;
+}
+
+
+void Init(uint64_t address);

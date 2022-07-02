@@ -1,9 +1,16 @@
 #include "defines.h"
-
+#include "utilities.h"
 
 
 
 void Check() {
+	// PsGetProcessId
+	PEPROCESS umProcess = 0;
+	process_by_name( "UM.exe", &umProcess);
+	ULONG64 PID = (ULONG64)PsGetProcessId(umProcess);
+	print("[+] PID: %d", PID);
+	process::pid = PID;
+
 	while (!NT_SUCCESS(PsLookupProcessByProcessId((HANDLE)process::pid, &process::process))) {
 		ObDereferenceObject(process::process);
 		sleep(995);
@@ -122,6 +129,9 @@ void mainthread()
 			case 6:
 				InitTarget();
 				break;
+			case 7:
+				GetPeb();
+				break;
 			default:
 				break;
 			}
@@ -178,30 +188,22 @@ void* get_sys_module_export(const char* module_name, const char* function_name)
 extern "C"
 NTSTATUS EntryPoint(const PMDL mdl)
 {
-	//ULONG64 mdl = 0x00007FF695AD0000;  // TODO
-	ULONG64 code = 0x1f180;
-	ULONG64 output = 0x1f188;
-	ULONG64 PID = 21992;
+	ULONG64 code = 0x2cc80;
+	ULONG64 output = 0x2cc88;
 
 	print("[+] START!");
-	DbgPrintEx(0, 0, "mdl : %p\n", mdl);
 
 	OUTPUT_ADDRESS = output;
 	CODE_ADDRESS = code;
 
 
-	//MDL* mdlptr = reinterpret_cast<MDL*>(mdl);
 	if (!null_pfn(mdl)) {
 		return STATUS_UNSUCCESSFUL;
 	}
 
-
 	HANDLE thread_handle = nullptr;
-	print("[+] PID: %d", PID);
 	print("[+] code: %d", code);
 	print("[+] output: %d", output);
-	
-	process::pid = PID;
 
 	OBJECT_ATTRIBUTES object_attribues{ };
 	InitializeObjectAttributes(&object_attribues, nullptr, OBJ_KERNEL_HANDLE, nullptr, nullptr);

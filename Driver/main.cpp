@@ -221,8 +221,8 @@ void* get_sys_module_export(const char* module_name, const char* function_name)
 extern "C"
 NTSTATUS EntryPoint(const PMDL mdl)
 {
-	ULONG64 code = 0x5638;
-	ULONG64 output = 0x5630;
+	ULONG64 code = 0x88c8;
+	ULONG64 output = 0x88c0;
 
 	print("[+] START!");
 

@@ -72,6 +72,20 @@ T Read(uint64_t read_address) {
 	return response;
 }
 
+void ReadStr(uint64_t read_address, void* data, size_t size) {
+	readd Data;
+	Data.output = (ULONG64)&data;
+
+	Data.address = read_address;
+
+	Data.size = size;
+
+	STRUCT_OFFSET_ADDRESS = &Data;
+	STATUS_CODE = 4;
+
+	Await_Approval();
+}
+
 
 void Connect() {
 	int i = 7777;
@@ -176,3 +190,28 @@ string GetUnicodeString(uint64_t addr) {
 
 
 void Init(uint64_t address);
+
+char* readString(uint64_t address)
+{
+	char* s;
+
+	int index = 0;
+
+	char c;
+
+	do
+	{
+		c = static_cast<char>(Read<char>(address + index));
+
+		index++;
+
+	} while (c);
+
+	s = new char[index + 1];
+
+	ReadStr(address, reinterpret_cast<void*>(s), index);
+
+	s[index] = '\0';
+
+	return s;
+}

@@ -45,8 +45,8 @@ uint64_t GetUnityPlayerBaseAddress(uint64_t address, string moduleName)
 
 }
 // offset 
-uint64_t offs_gameObjectManager = 0x156C698;
-
+uint64_t offs_gameObjectManager = 0x17FFD28; // UPDATED 7/3/2022
+uint64_t offs_active_objects = 0x18; // UPDATED 7/4/2022
 namespace EFTStructs
 {
 	struct BaseObject
@@ -80,6 +80,14 @@ namespace EFTStructs
 	}; //Size=0x001C
 }
 
+struct
+{
+	static constexpr uint64_t itemList = 0x48; //UPDATED 1/11/2020
+	static constexpr uint64_t registeredPlayers = 0x0080; //UPDATED 1/7/2021
+	static constexpr uint64_t m_LocalPlayerID = 0x30;
+} localGameWorld_offsets;
+
+
 // EFT 读取 Chain
 uint64_t readEFTChain(uint64_t base, const std::vector<uint64_t>& offsets) {
 	uint64_t result = Read<uint64_t>(base + offsets.at(0));
@@ -97,13 +105,14 @@ uint64_t GetObjectFromList(uint64_t listPtr, uint64_t lastObjectPtr, const char*
 
 	BaseObject activeObject = Read<BaseObject>(listPtr);
 	BaseObject lastObject = Read<BaseObject>(lastObjectPtr);
-
+	std::cout << "GAME || activeObject.object :" << activeObject.object << std::endl;
 	if (activeObject.object != 0x0)
 	{
 		while (activeObject.object != 0 && activeObject.object != lastObject.object)
 		{
 			classNamePtr = Read<uint64_t>(activeObject.object + 0x60);
 			name[256] = Read<char>(classNamePtr + 0x0);
+			std::cout << "name1 :" << name << std::endl;
 			//driver::read_memory(classNamePtr + 0x0, &name, sizeof(name));
 			if (strcmp(name, objectName) == 0)
 			{
@@ -117,6 +126,8 @@ uint64_t GetObjectFromList(uint64_t listPtr, uint64_t lastObjectPtr, const char*
 	{
 		classNamePtr = Read<uint64_t>(lastObject.object + 0x60);
 		name[256] = Read<char>(classNamePtr + 0x0);
+		string name1 = GetUnicodeString(classNamePtr + 0x0);
+		std::cout << "name2 :" << name << "|" << name1 << std::endl;
 		if (strcmp(name, objectName) == 0)
 		{
 			return lastObject.object;
@@ -134,13 +145,55 @@ void Init(uint64_t address) {
 	uint64_t unityPlayerBaseAddress = address;
 	std::cout << "GAME || unityPlayerBaseAddress :" << address << std::endl;
 
-	auto active_objects = Read<std::array<uint64_t, 2>>(offs_gameObjectManager + offsetof(EFTStructs::GameObjectManager, lastActiveObject));
-	std::cout << "GAME || active_objects : active_objects[0]:" << active_objects[0] << "active_objects[1]:" << active_objects[1] << std::endl;
-	uint64_t gameWorld = GetObjectFromList(active_objects[1], active_objects[0], _xor_("GameWorld"));
+	uint64_t gameObjectManager = Read<uint64_t>(address + offs_gameObjectManager);
+	std::cout << "GAME || gameObjectManager :" << gameObjectManager << std::endl;
 
+
+	//const auto last_active = Read<uintptr_t>(gameObjectManager + 0x10);
+	//const auto active_objects = Read<uintptr_t>(gameObjectManager + 0x18);
+	//std::cout << "GAME || active_objects : last_active:" << last_active << "active_objects:" << active_objects << std::endl;
+	//uint64_t gameWorld = GetObjectFromList(active_objects, last_active, _xor_("GameWorld"));
+	//std::cout << "GAME || gameWorld :" << gameWorld << std::endl;
+
+	auto active_objects = Read<std::array<uint64_t, 2>>(gameObjectManager + offsetof(EFTStructs::GameObjectManager, lastActiveObject));
+	std::cout << "GAME || active_objects : last_active:" << active_objects[0] << "active_objects:" << active_objects[1] << std::endl;
+
+	uint64_t gameWorld = GetObjectFromList(active_objects[1], active_objects[0], _xor_("GameWorld"));
 	std::cout << "GAME || gameWorld :" << gameWorld << std::endl;
 
-	//uint64_t localGameWorld = readEFTChain<uint64_t>
+	//uint64_t buffer_gom = Read<uint64_t>(gameObjectManager + 0x28);
+	//uint64_t gameWorld = 0;
+	//if (buffer_gom != 0)
+	//{
+	//	int loop_count = 1000;
+	//	for (int i = 0; i < loop_count; i++)
+	//	{
+	//		uint64_t object_ptr = Read<uint64_t>(buffer_gom + 0x10);
+	//		uint64_t object_name_ptr = Read<uint64_t>(object_ptr + 0x60);
+	//		std::cout << "GAME || find Str" << GetUnicodeString(object_name_ptr) << std::endl;
+	//		if (GetUnicodeString(object_name_ptr) == "GameWorld")
+	//		{
+	//			gameWorld = object_name_ptr;
+	//			break;
+	//		}
+	//	}
+	//}
+	//else {
+	//	std::cout << "GAME || buffer_gom find fail :" << std::endl;
+	//}
+
+	uint64_t localGameWorld = readEFTChain(gameWorld, { 0x30, 0x18, 0x28 });
+	std::cout << "GAME || localGameWorld :" << localGameWorld << std::endl;
+
+	// 读取玩家信息
+	uint64_t onlineusers = Read<uint64_t>(localGameWorld + localGameWorld_offsets.registeredPlayers);
+	std::cout << "GAME || onlineusers :" << onlineusers << std::endl;
+
+
+	uint64_t list_base = Read<uint64_t>(onlineusers + offsetof(EFTStructs::List, listBase));
+	int player_count = Read<int>(onlineusers + offsetof(EFTStructs::List, itemCount));
+	std::cout << "GAME || player_count :" << player_count << std::endl;
+
 }
 
 void Start() {

@@ -112,7 +112,7 @@ void GetPeb() {
 				ULONG64 StructAddress = readlocal<ULONG64>(process::STRUCT_OFFSET_ADDRESS); //no double because direct writing
 				writelocal<ULONG64>(&baseAddr, (PVOID)StructAddress);
 
-				print("\n[+] peb:  0x%llX", (uint64_t)peb);
+				print("\n[+] peb:  0x%llX", baseAddr);
 
 				status::SUCESSFUL();
 
@@ -141,15 +141,16 @@ void Read() {
 
 	print("\n[+] read1:  0x%llX , %d", StructAddress.address, StructAddress.size);
 
-	int get1 = readTarget<int>(StructAddress.address);
+	//int get1 = readTarget<int>(StructAddress.address);
 
-	if (StructAddress.address < 0x7FFFFFFFFFF && StructAddress.address > 0 && StructAddress.size > 0 && StructAddress.size < 200) {
+	// 0x7FFFFFFFFFF
+	if (StructAddress.address < 0x7FFFFFFFFFFF && StructAddress.address > 0 && StructAddress.size > 0 && StructAddress.size < 200) {
 		read(StructAddress.address, StructAddress.output, StructAddress.size);
 		print("\n[+] read inner:    0x%llX", StructAddress.output);
 	}
 	status::SUCESSFUL(); //we cant check if its unsuccessful
 
-	int get2 = readlocal<int>(StructAddress.address);
+	//int get2 = readlocal<int>(StructAddress.address);
 }
 
 

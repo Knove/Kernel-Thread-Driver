@@ -144,6 +144,7 @@
   <ItemGroup>
     <ClInclude Include="Driver.h" />
     <ClInclude Include="stdafx.h" />
+    <ClInclude Include="xorstr.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

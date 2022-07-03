@@ -26,7 +26,6 @@ bool Connect() {
 	}
 	print("\n[+] connected!");
 	status::ONLINE();
-
 	return true;
 }
 
@@ -58,7 +57,7 @@ void Disconnect() {
 
 void InitTarget() {
 	process::target_pid = readlocal<ULONG64>(readlocal<ULONG64>(process::STRUCT_OFFSET_ADDRESS));//double reading because STRUCT_OFFSET_ADDRESS saves a pointer that has pid
-	print("\n[+] process::target_pid: %d", process::target_pid);
+	print("\n[+] process:: target_pid: %d", process::target_pid);
 	if (process::target_pid != 0) {
 		status::SUCESSFUL();
 	}
@@ -93,7 +92,7 @@ void GetPeb() {
 
 		if (!ldr)
 		{
-			DbgPrintEx(0, 0, "Error pLdr not found \n");
+			DbgPrintEx(0, 0, "Error pLdr not found£¡ \n");
 			KeUnstackDetachProcess(&state);
 			status::ERROR();
 		}

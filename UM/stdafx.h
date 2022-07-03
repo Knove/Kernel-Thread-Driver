@@ -7,6 +7,8 @@
 #include <string>
 #include <locale>
 #include <codecvt>
+#include <vector>
+#include "xorstr.hpp"
 
 #include "Driver.h"
 

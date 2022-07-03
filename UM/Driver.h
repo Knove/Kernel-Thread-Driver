@@ -44,6 +44,15 @@ void Disconnect() {
 	std::cout << "disconnected!" << std::endl;
 }
 
+void Restart() {
+	std::cout << "restart..." << std::endl;
+
+	STATUS_CODE = 8;
+	Sleep(300);
+
+	std::cout << "restarted!" << std::endl;
+}
+
 template<class T>
 T Read(uint64_t read_address) {
 	readd Data;
@@ -65,7 +74,7 @@ T Read(uint64_t read_address) {
 
 
 void Connect() {
-	int i = 3355;
+	int i = 7777;
 	STATUS_CODE_ADDRESS = &STATUS_CODE;
 	STRUCT_OFFSET_ADDRESS = &i;
 

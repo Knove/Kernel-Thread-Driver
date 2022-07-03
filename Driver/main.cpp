@@ -3,20 +3,30 @@
 
 
 
-void Check() {
+bool Check() {
 	// PsGetProcessId
 	PEPROCESS umProcess = 0;
 	process_by_name( "UM.exe", &umProcess);
-	ULONG64 PID = (ULONG64)PsGetProcessId(umProcess);
-	print("[+] PID: %d", PID);
-	process::pid = PID;
-
-	while (!NT_SUCCESS(PsLookupProcessByProcessId((HANDLE)process::pid, &process::process))) {
-		ObDereferenceObject(process::process);
-		sleep(995);
+	if (umProcess)
+	{
+		ULONG64 PID = (ULONG64)PsGetProcessId(umProcess);
+		print("[+] PID: %d", PID);
+		process::pid = PID;
+		PsLookupProcessByProcessId((HANDLE)process::pid, &process::process);
+		print("\n[+] found process! Pid: %i", process::pid);
+		return true;
 	}
-	//process::pid = reinterpret_cast<ULONG>(PsGetProcessId(process::process));
-	print("\n[+] found process! Pid: %i", process::pid);
+	else 
+	{
+		return false;
+	}
+
+	//while (!NT_SUCCESS(PsLookupProcessByProcessId((HANDLE)process::pid, &process::process))) {
+	//	ObDereferenceObject(process::process);
+	//	sleep(995);
+	//}
+	// // process::pid = reinterpret_cast<ULONG>(PsGetProcessId(process::process));
+	//print("\n[+] found process! Pid: %i", process::pid);
 
 }
 
@@ -76,6 +86,55 @@ OSVERSIONINFOW GetOSVersion() {
 	return OSInfo;
 }
 
+void init()
+{
+	print("[+] init start...");
+
+	print("[+] find UM.EXE...");
+	while (!Check())
+	{
+		sleep(1000);
+	}
+	;
+	sleep(3000);
+	print("[+] CONNECTING...");
+	if (Connect()) {
+		bool status = true;
+		while (status) {
+			int code = CheckCode();
+			switch (code) {
+			case 3:
+				Disconnect();
+				break;
+			case 4:
+				Read();
+				break;
+			case 5:
+				GetBase();
+				break;
+			case 6:
+				InitTarget();
+				break;
+			case 7:
+				GetPeb();
+				break;
+			case 8:
+				status = false;
+				print("[+] restart in 5s... plz close UM.EXE");
+				sleep(5000);
+				init();
+				break;
+			default:
+				break;
+			}
+		}
+	}
+	else {
+		print("\n[+] Failed to connect! Disconnecting....");
+		Disconnect();
+	}
+}
+
 void mainthread()
 {
 	//KeSetBasePriorityThread(KeGetCurrentThread(), 31);
@@ -111,39 +170,13 @@ void mainthread()
 	//print("\n[+] waiting for program");
 
 	sleep(1000);
-	Check();
-	sleep(3000);
-	if (Connect()) {
-		while (true) {
-			int code = CheckCode();
-			switch (code) {
-			case 3:
-				Disconnect();
-				break;
-			case 4: 
-				Read();
-				break;
-			case 5:
-				GetBase();
-				break;
-			case 6:
-				InitTarget();
-				break;
-			case 7:
-				GetPeb();
-				break;
-			default:
-				break;
-			}
-		}
-	}
-	else {
-		//print("\n[+] Failed to connect! Disconnecting....");
-		Disconnect();
-	}
+	init();
 
 
 }
+
+
+
 void* get_sys_module(const char* module_name)
 {
 	void* module_base = 0;
@@ -188,8 +221,8 @@ void* get_sys_module_export(const char* module_name, const char* function_name)
 extern "C"
 NTSTATUS EntryPoint(const PMDL mdl)
 {
-	ULONG64 code = 0x2cc80;
-	ULONG64 output = 0x2cc88;
+	ULONG64 code = 0x5638;
+	ULONG64 output = 0x5630;
 
 	print("[+] START!");
 

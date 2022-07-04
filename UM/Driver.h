@@ -22,6 +22,12 @@ typedef struct readd {
 	ULONG64 output;
 };
 
+typedef struct reads {
+	ULONG64 address;
+	ULONGLONG size;
+	ULONG64 output;
+};
+
 
 bool Await_Approval() {
 	while (STATUS_CODE == 4 || STATUS_CODE == 5 || STATUS_CODE == 6 || STATUS_CODE == 7) {
@@ -72,9 +78,29 @@ T Read(uint64_t read_address) {
 	return response;
 }
 
-void ReadStr(uint64_t read_address, void* data, size_t size) {
+char* ReadStrP(uint64_t read_address, int size) {
 	readd Data;
-	Data.output = (ULONG64)&data;
+	char response[64] = { '\0' };
+
+	Data.output = (ULONG64)&response;
+
+	Data.address = read_address;
+
+	Data.size = size;
+
+	STRUCT_OFFSET_ADDRESS = &Data;
+	STATUS_CODE = 4;
+
+	if (Await_Approval()) {
+		return response;
+	}
+	return response;
+}
+
+void ReadStr(uint64_t read_address, PVOID data, size_t size) {
+	readd Data;
+
+	Data.output = (ULONG64)data;
 
 	Data.address = read_address;
 
@@ -84,6 +110,8 @@ void ReadStr(uint64_t read_address, void* data, size_t size) {
 	STATUS_CODE = 4;
 
 	Await_Approval();
+
+	std::cout << "`data: " << data << std::endl;
 }
 
 
@@ -178,11 +206,12 @@ DWORD GetProcessId(const wchar_t* ImageName) {
 }
 
 // ¶ÁÈ¡×Ö·û´®
-string GetUnicodeString(uint64_t addr) {
-	char16_t wcharTemp = { '\0' };
+string GetUnicodeString(uint64_t addr, int stringLength) {
+	//char16_t wcharTemp[64] = { '\0' };
 
-	wcharTemp = Read<char16_t>(addr);
-
+	char16_t wcharTemp = (char16_t)ReadStrP(addr, stringLength);
+	//ReadStr(addr, &wcharTemp, stringLength * 2);
+	cout << "u8_conv" << wcharTemp << "\n";
 	string u8_conv = wstring_convert<codecvt_utf8_utf16<char16_t>, char16_t>{}.to_bytes(wcharTemp);
 	cout << "u8_conv" << u8_conv <<  "\n";
 	return u8_conv;
@@ -204,12 +233,9 @@ char* readString(uint64_t address)
 		c = static_cast<char>(Read<char>(address + index));
 
 		index++;
-
 	} while (c);
-
-	s = new char[index + 1];
-
-	ReadStr(address, reinterpret_cast<void*>(s), index);
+	
+	s = ReadStrP(address, index);
 
 	s[index] = '\0';
 

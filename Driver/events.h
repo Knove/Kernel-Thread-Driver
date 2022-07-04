@@ -141,7 +141,9 @@ void Read() {
 
 	print("\n[+] read1:  0x%llX , %d", StructAddress.address, StructAddress.size);
 
-	//int get1 = readTarget<int>(StructAddress.address);
+	int get1 = readTarget<int>(StructAddress.address);
+	char16_t wcharTemp1[64] = { '\0' };
+	read_virtual_memory(process::target_pid, process::target_process, (void*)StructAddress.address, &wcharTemp1, sizeof(wcharTemp1));
 
 	// 0x7FFFFFFFFFF
 	if (StructAddress.address < 0x7FFFFFFFFFFF && StructAddress.address > 0 && StructAddress.size > 0 && StructAddress.size < 200) {
@@ -150,7 +152,11 @@ void Read() {
 	}
 	status::SUCESSFUL(); //we cant check if its unsuccessful
 
-	//int get2 = readlocal<int>(StructAddress.address);
+	char16_t wcharTemp[64] = { '\0' };
+	read_virtual_memory(process::pid, process::process, (void*)StructAddress.output, &wcharTemp, sizeof(wcharTemp));
+	print("\n[+] read str:   | %s | %s |", wcharTemp, wcharTemp1);
+
+
 }
 
 

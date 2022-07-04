@@ -35,7 +35,7 @@ uint64_t GetUnityPlayerBaseAddress(uint64_t address, string moduleName)
 		uint64_t intialNamePtr = InMemoryOrderModuleList_CurrentModule + _intialNamePtrOffset;
 		uint64_t actualNamePtr = Read<uint64_t>(intialNamePtr + _actualNamePtrOffset);
 		std::cout << "actualNamePtr : 0x" << std::hex << actualNamePtr << std::endl;
-		string actualName = GetUnicodeString(actualNamePtr);
+		string actualName = GetUnicodeString(actualNamePtr, 256);
 		std::cout << "actualName :" << actualName << std::endl;
 
 		break;
@@ -126,7 +126,7 @@ uint64_t GetObjectFromList(uint64_t listPtr, uint64_t lastObjectPtr, const char*
 	{
 		classNamePtr = Read<uint64_t>(lastObject.object + 0x60);
 		name[256] = Read<char>(classNamePtr + 0x0);
-		string name1 = GetUnicodeString(classNamePtr + 0x0);
+		string name1 = GetUnicodeString(classNamePtr + 0x0, 256);
 		std::cout << "name2 :" << name << "|" << name1 << std::endl;
 		if (strcmp(name, objectName) == 0)
 		{
@@ -201,7 +201,7 @@ void Start() {
 }
 
 
-int main()
+int main1()
 {
 	//use your mapper code here:
 
@@ -276,5 +276,114 @@ int main()
 
 
 	
+}
+
+int main()
+{
+
+	std::cout << "Hello world!!" << std::endl;
+	pid = GetProcessId(L"UM.exe");
+
+	std::cout << "UM PID:" << pid << std::endl;
+
+	targetPid = GetProcessId(L"Test.exe");
+
+	std::cout << "TARGET PID:" << targetPid << std::endl;
+
+	Connect();
+
+
+	//init our target
+	if (targetPid != 0) {
+		std::cout << "INIT TAEGET...." << std::endl;
+
+		if (!initTarget(targetPid)) return 1;
+
+		baseaddress = GetBase();
+
+		std::cout << "base: 0x" << std::hex << baseaddress << std::endl;
+
+	}
+
+
+	uint64_t FindStr = 0x00002017DDF998;
+	uint64_t FindChar = 0x0002017DDF9E0;
+	uint64_t FindNum = 0x00002017DDFAF4;
+	int num = Read<int>(FindNum);
+	std::cout << "findNum:"  << num << std::endl;
+
+	//string name1 = GetUnicodeString( FindStr, 64);
+	//std::cout << "name1: " << name1 << std::endl;
+	//string name2 = GetUnicodeString( FindChar, 64);
+	//std::cout << "name2: " << name1 << std::endl;
+
+	//char* name5 = readString( FindStr);
+	//std::cout << "name5: " << name5 << std::endl;
+
+
+	char* name6 = readString( FindChar);
+	std::cout << "name6: " << name6 << std::endl;
+
+
+	//char16_t wcharTemp[64] = { '\0' };
+
+	//ReadStr( FindStr, &wcharTemp, 256 * 2);
+	//std::cout << "name3: " << wcharTemp << std::endl;
+	//std::cout << "name3: " << *wcharTemp << std::endl;
+
+	//char16_t wcharTemp1[64] = { '\0' };
+
+	//ReadStr( FindChar, &wcharTemp1, 256 * 2);
+	//std::cout << "name4: " << wcharTemp1 << std::endl;
+	//std::cout << "name4: " << *wcharTemp1 << std::endl;
+
+	//char16_t name7 = Read<char16_t>( FindChar);
+	//std::cout << "name7: " << name7 << std::endl;
+
+	//char16_t name8 = Read<char16_t>( FindStr);
+	//std::cout << "name8: " << name8 << std::endl;
+
+
+	//char* temp = ReadStrP(FindChar);
+	//std::cout << "name9: " << temp << std::endl;
+
+	//char* temp1 = ReadStrP(FindStr);
+	//std::cout << "name10: " << temp1 << std::endl;
+	// 
+	// 
+	//std::cout << "findNum: 0x" << std::hex << findNum << std::endl;
+
+	//int UWORLD = Read<int>(findNum);
+
+	//std::cout << "test2: " << UWORLD << std::endl;
+
+	//uint64_t UWORLD1 = Read<uint64_t>(0x13D2EFFA98 + baseaddress);
+
+	//std::cout << "tes2t: 0x" << std::hex << UWORLD1 << std::endl;
+
+
+
+
+	int status = 999;
+
+	while (status == 999)
+	{
+		int flag = 0;
+		std::cin >> flag;
+		// 关闭驱动
+		if (flag == 1)
+		{
+			Disconnect();
+		}
+		// 驱动重置
+		if (flag == 2)
+		{
+			Restart();
+		}
+	}
+
+
+
+
 }
 
